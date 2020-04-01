@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/jfcantu/threatstack-golang/threatstack"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/jfcantu/threatstack-golang/threatstack"
 )
 
 func resourceRuleset() *schema.Resource {
@@ -66,11 +66,24 @@ func resourceRulesetUpdate(resourceData *schema.ResourceData, meta interface{}) 
 	name := resourceData.Get("name").(string)
 	desc := resourceData.Get("description").(string)
 
-	_, err := client.Rulesets.Update(
+	currentRuleList, err := client.Rules.List(id)
+	if err != nil {
+		return err
+	}
+
+	var ruleIds []string
+
+	for _, v := range currentRuleList {
+		ruleID := v.(threatstack.Rule).GetID()
+		ruleIds = append(ruleIds, ruleID)
+	}
+
+	_, err = client.Rulesets.Update(
 		&threatstack.Ruleset{
 			ID:          id,
 			Name:        name,
 			Description: desc,
+			RuleIDs:     ruleIds,
 		})
 	if err != nil {
 		return nil
