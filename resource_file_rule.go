@@ -8,10 +8,10 @@ import (
 
 func resourceFileRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostRuleCreate,
-		Read:   resourceHostRuleRead,
-		Update: resourceHostRuleUpdate,
-		Delete: resourceHostRuleDelete,
+		Create: resourceFileRuleCreate,
+		Read:   resourceFileRuleRead,
+		Update: resourceFileRuleUpdate,
+		Delete: resourceFileRuleDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -154,6 +154,7 @@ func resourceFileRuleCreate(resourceData *schema.ResourceData, meta interface{})
 	for _, v := range resourceData.Get("suppressions").(*schema.Set).List() {
 		suppressions = append(suppressions, v.(string))
 	}
+
 	enabled := resourceData.Get("enabled").(bool)
 	tags := threatstack.NewTagSet()
 
@@ -180,10 +181,20 @@ func resourceFileRuleCreate(resourceData *schema.ResourceData, meta interface{})
 		})
 	}
 
+	var ignorePaths []string
+	for _, v := range resourceData.Get("ignore_files").(*schema.Set).List() {
+		ignorePaths = append(ignorePaths, v.(string))
+	}
+
+	var monitorEvents []string
+	for _, v := range resourceData.Get("monitor_events").(*schema.Set).List() {
+		monitorEvents = append(monitorEvents, v.(string))
+	}
+
 	rule, err := client.Rules.Create(
 		ruleset,
 		&threatstack.FileRule{
-			Type:            "Host",
+			Type:            "File",
 			Name:            name,
 			Tags:            tags,
 			Title:           title,
@@ -194,6 +205,9 @@ func resourceFileRuleCreate(resourceData *schema.ResourceData, meta interface{})
 			Window:          window,
 			Threshold:       threshold,
 			Suppressions:    suppressions,
+			Paths:           paths,
+			IgnoreFiles:     ignorePaths,
+			MonitorEvents:   monitorEvents,
 			Enabled:         enabled,
 		})
 	if err != nil {
@@ -201,7 +215,7 @@ func resourceFileRuleCreate(resourceData *schema.ResourceData, meta interface{})
 	}
 
 	resourceData.SetId((*rule).GetID())
-	return resourceHostRuleRead(resourceData, meta)
+	return resourceFileRuleRead(resourceData, meta)
 }
 
 func resourceFileRuleRead(resourceData *schema.ResourceData, meta interface{}) error {
@@ -223,6 +237,14 @@ func resourceFileRuleRead(resourceData *schema.ResourceData, meta interface{}) e
 	resourceData.Set("window", (*resp).(*threatstack.HostRule).Window)
 	resourceData.Set("threshold", (*resp).(*threatstack.HostRule).Threshold)
 	resourceData.Set("enabled", (*resp).(*threatstack.HostRule).Enabled)
+	resourceData.Set("name", (*resp).(*threatstack.FileRule).Name)
+	resourceData.Set("type", (*resp).(*threatstack.FileRule).Type)
+	resourceData.Set("title", (*resp).(*threatstack.FileRule).Title)
+	resourceData.Set("severity", (*resp).(*threatstack.FileRule).Severity)
+	resourceData.Set("filter", (*resp).(*threatstack.FileRule).Filter)
+	resourceData.Set("window", (*resp).(*threatstack.FileRule).Window)
+	resourceData.Set("threshold", (*resp).(*threatstack.FileRule).Threshold)
+	resourceData.Set("enabled", (*resp).(*threatstack.FileRule).Enabled)
 
 	return nil
 }
@@ -246,8 +268,8 @@ func resourceFileRuleUpdate(resourceData *schema.ResourceData, meta interface{})
 	_, err := client.Rules.Update(
 		ruleset,
 		id,
-		&threatstack.HostRule{
-			Type:            "Host",
+		&threatstack.FileRule{
+			Type:            "File",
 			Name:            name,
 			Title:           title,
 			Description:     desc,
@@ -264,7 +286,7 @@ func resourceFileRuleUpdate(resourceData *schema.ResourceData, meta interface{})
 		return nil
 	}
 
-	return resourceHostRuleRead(resourceData, meta)
+	return resourceFileRuleRead(resourceData, meta)
 }
 
 func resourceFileRuleDelete(resourceData *schema.ResourceData, meta interface{}) error {
@@ -282,7 +304,7 @@ func resourceFileRuleDelete(resourceData *schema.ResourceData, meta interface{})
 }
 
 func validateFileRuleAggregateFields() schema.SchemaValidateFunc {
-	return validation.StringInSlice(getValidHostRuleAggregateFields(), true)
+	return validation.StringInSlice(getValidFileRuleAggregateFields(), true)
 }
 
 func getValidFileRuleAggregateFields() []string {

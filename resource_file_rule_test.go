@@ -39,7 +39,7 @@ resource "threatstack_file_rule" "test" {
 	ruleset = threatstack_ruleset.test.id
 	severity = 1
 	aggregate_fields = ["filename"]
-	monitor_events=["all"]
+	monitor_events = ["all"]
 	file_path {
 		path = "/etc"
 		recursive = true
