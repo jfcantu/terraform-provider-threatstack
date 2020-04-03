@@ -44,6 +44,16 @@ resource "threatstack_host_rule" "test" {
 	threshold = 1
 	suppressions = ["event_type != \"host\""]
 	enabled = true
+	include_tag {
+		source = "ec2"
+		key = "includekey"
+		value = "includevalue"
+	}
+	exclude_tag {
+		source = "ec2"
+		key = "excludekey"
+		value = "excludevalue"
+	}
 }
 
 %s

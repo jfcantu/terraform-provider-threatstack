@@ -229,14 +229,25 @@ func resourceFileRuleRead(resourceData *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
-	resourceData.Set("name", (*resp).(*threatstack.HostRule).Name)
-	resourceData.Set("type", (*resp).(*threatstack.HostRule).Type)
-	resourceData.Set("title", (*resp).(*threatstack.HostRule).Title)
-	resourceData.Set("severity", (*resp).(*threatstack.HostRule).Severity)
-	resourceData.Set("filter", (*resp).(*threatstack.HostRule).Filter)
-	resourceData.Set("window", (*resp).(*threatstack.HostRule).Window)
-	resourceData.Set("threshold", (*resp).(*threatstack.HostRule).Threshold)
-	resourceData.Set("enabled", (*resp).(*threatstack.HostRule).Enabled)
+	var includeTags []map[string]interface{}
+	var excludeTags []map[string]interface{}
+
+	for _, v := range (*resp).(*threatstack.FileRule).GetTags().Include {
+		includeTags = append(includeTags, map[string]interface{}{
+			"source": v.Source,
+			"key":    v.Key,
+			"value":  v.Value,
+		})
+	}
+
+	for _, v := range (*resp).(*threatstack.FileRule).GetTags().Exclude {
+		excludeTags = append(excludeTags, map[string]interface{}{
+			"source": v.Source,
+			"key":    v.Key,
+			"value":  v.Value,
+		})
+	}
+
 	resourceData.Set("name", (*resp).(*threatstack.FileRule).Name)
 	resourceData.Set("type", (*resp).(*threatstack.FileRule).Type)
 	resourceData.Set("title", (*resp).(*threatstack.FileRule).Title)
@@ -245,6 +256,8 @@ func resourceFileRuleRead(resourceData *schema.ResourceData, meta interface{}) e
 	resourceData.Set("window", (*resp).(*threatstack.FileRule).Window)
 	resourceData.Set("threshold", (*resp).(*threatstack.FileRule).Threshold)
 	resourceData.Set("enabled", (*resp).(*threatstack.FileRule).Enabled)
+	resourceData.Set("include_tag", includeTags)
+	resourceData.Set("exclude_tag", excludeTags)
 
 	return nil
 }
