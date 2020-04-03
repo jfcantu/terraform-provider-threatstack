@@ -202,9 +202,12 @@ func resourceHostRuleRead(resourceData *schema.ResourceData, meta interface{}) e
 	resourceData.Set("name", (*resp).(*threatstack.HostRule).Name)
 	resourceData.Set("type", (*resp).(*threatstack.HostRule).Type)
 	resourceData.Set("title", (*resp).(*threatstack.HostRule).Title)
+	resourceData.Set("description", (*resp).(*threatstack.HostRule).Description)
 	resourceData.Set("severity", (*resp).(*threatstack.HostRule).Severity)
+	resourceData.Set("aggregate_fields", (*resp).(*threatstack.HostRule).AggregateFields)
 	resourceData.Set("filter", (*resp).(*threatstack.HostRule).Filter)
 	resourceData.Set("window", (*resp).(*threatstack.HostRule).Window)
+	resourceData.Set("suppressions", (*resp).(*threatstack.HostRule).Suppressions)
 	resourceData.Set("threshold", (*resp).(*threatstack.HostRule).Threshold)
 	resourceData.Set("enabled", (*resp).(*threatstack.HostRule).Enabled)
 	resourceData.Set("include_tag", includeTags)
@@ -222,12 +225,38 @@ func resourceHostRuleUpdate(resourceData *schema.ResourceData, meta interface{})
 	desc := resourceData.Get("description").(string)
 	ruleset := resourceData.Get("ruleset").(string)
 	severity := resourceData.Get("severity").(int)
-	aggregate := resourceData.Get("aggregate_fields").([]string)
+
+	var aggregate []string
+	for _, v := range resourceData.Get("aggregate_fields").(*schema.Set).List() {
+		aggregate = append(aggregate, v.(string))
+	}
+
 	filter := resourceData.Get("filter").(string)
 	window := resourceData.Get("window").(int)
 	threshold := resourceData.Get("threshold").(int)
-	suppressions := resourceData.Get("suppressions").([]string)
+
+	var suppressions []string
+	for _, v := range resourceData.Get("suppressions").(*schema.Set).List() {
+		suppressions = append(suppressions, v.(string))
+	}
+
 	enabled := resourceData.Get("enabled").(bool)
+	tags := threatstack.NewTagSet()
+
+	for _, tag := range resourceData.Get("include_tag").(*schema.Set).List() {
+		tags.Include = append(tags.Include, &threatstack.Tag{
+			Source: tag.(map[string]interface{})["source"].(string),
+			Key:    tag.(map[string]interface{})["key"].(string),
+			Value:  tag.(map[string]interface{})["value"].(string),
+		})
+	}
+	for _, tag := range resourceData.Get("exclude_tag").(*schema.Set).List() {
+		tags.Exclude = append(tags.Exclude, &threatstack.Tag{
+			Source: tag.(map[string]interface{})["source"].(string),
+			Key:    tag.(map[string]interface{})["key"].(string),
+			Value:  tag.(map[string]interface{})["value"].(string),
+		})
+	}
 
 	_, err := client.Rules.Update(
 		ruleset,
@@ -235,6 +264,7 @@ func resourceHostRuleUpdate(resourceData *schema.ResourceData, meta interface{})
 		&threatstack.HostRule{
 			Type:            "Host",
 			Name:            name,
+			Tags:            tags,
 			Title:           title,
 			Description:     desc,
 			RulesetID:       ruleset,

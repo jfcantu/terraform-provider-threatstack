@@ -81,10 +81,13 @@ func testAccCheckThreatstackRuleDestroyed(s *terraform.State) error {
 	return nil
 }
 
-const testAccThreatstackRuleTestRuleset = `
+func testAccThreatstackRuleTestRuleset() string {
+	return fmt.Sprintf(
+		`
 resource "threatstack_ruleset" "test" {
-	name = "tfRuleTestRuleset"
+	name = "%s"
 
 	description = "Ruleset to hold rules being tested"
 }
-`
+`, fmt.Sprintf("tf%s", acctest.RandString(5)))
+}

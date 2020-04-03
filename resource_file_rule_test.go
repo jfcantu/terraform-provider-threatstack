@@ -33,7 +33,7 @@ func TestAccThreatstackFileRule_basic(test *testing.T) {
 			{
 				Config: fmt.Sprintf("%s\n%s",
 					testAccBasicFileRule(testRuleName, testRuleTitle, testRuleDesc, testRuleSeverity),
-					testAccThreatstackRuleTestRuleset,
+					testAccThreatstackRuleTestRuleset(),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThreatstackRuleExists("threatstack_file_rule.test"),
@@ -60,7 +60,7 @@ func TestAccThreatstackFileRule_basic(test *testing.T) {
 			{
 				Config: fmt.Sprintf("%s\n%s",
 					testAccBasicFileRuleWithTags(testRuleName, testRuleTitle, testRuleDesc, testRuleSeverity),
-					testAccThreatstackRuleTestRuleset,
+					testAccThreatstackRuleTestRuleset(),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThreatstackRuleExists("threatstack_file_rule.test"),
@@ -93,7 +93,7 @@ func TestAccThreatstackFileRule_basic(test *testing.T) {
 			{
 				Config: fmt.Sprintf("%s\n%s",
 					testAccBasicFileRuleUpdated(testRuleName, testRuleTitle, testRuleDesc, testRuleSeverity),
-					testAccThreatstackRuleTestRuleset,
+					testAccThreatstackRuleTestRuleset(),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThreatstackRuleExists("threatstack_file_rule.test"),
@@ -201,7 +201,7 @@ resource "threatstack_file_rule" "test" {
 	ruleset = threatstack_ruleset.test.id
 	severity = %d
 	### Important note - Threat Stack will force "command" and "filename" no matter what
-	aggregate_fields = ["command", "filename"]
+	aggregate_fields = ["command""]
 	monitor_events = ["all"]
 	file_path {
 		path = "/etc"
