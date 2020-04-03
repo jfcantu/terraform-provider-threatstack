@@ -57,7 +57,7 @@ func sweepRulesets(region string) error {
 		if strings.HasPrefix(ruleset.Name, "tf") {
 			err := client.Rulesets.Delete(ruleset.ID)
 			if err != nil {
-				log.Errorf("Error deleting rule %s: %s", ruleset.Name, err.Error())
+				log.Errorf("Error deleting ruleset %s: %s", ruleset.Name, err.Error())
 			}
 		}
 	}

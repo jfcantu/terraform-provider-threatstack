@@ -66,16 +66,9 @@ func resourceRulesetUpdate(resourceData *schema.ResourceData, meta interface{}) 
 	name := resourceData.Get("name").(string)
 	desc := resourceData.Get("description").(string)
 
-	currentRuleList, err := client.Rules.List(id)
+	current, err := client.Rulesets.Get(id)
 	if err != nil {
 		return err
-	}
-
-	var ruleIds []string
-
-	for _, v := range currentRuleList {
-		ruleID := v.(threatstack.Rule).GetID()
-		ruleIds = append(ruleIds, ruleID)
 	}
 
 	_, err = client.Rulesets.Update(
@@ -83,7 +76,7 @@ func resourceRulesetUpdate(resourceData *schema.ResourceData, meta interface{}) 
 			ID:          id,
 			Name:        name,
 			Description: desc,
-			RuleIDs:     ruleIds,
+			RuleIDs:     current.RuleIDs,
 		})
 	if err != nil {
 		return nil
