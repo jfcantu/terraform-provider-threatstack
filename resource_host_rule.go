@@ -180,6 +180,25 @@ func resourceHostRuleRead(resourceData *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
+	var includeTags []map[string]interface{}
+	var excludeTags []map[string]interface{}
+
+	for _, v := range (*resp).(*threatstack.HostRule).GetTags().Include {
+		includeTags = append(includeTags, map[string]interface{}{
+			"source": v.Source,
+			"key":    v.Key,
+			"value":  v.Value,
+		})
+	}
+
+	for _, v := range (*resp).(*threatstack.HostRule).GetTags().Exclude {
+		excludeTags = append(excludeTags, map[string]interface{}{
+			"source": v.Source,
+			"key":    v.Key,
+			"value":  v.Value,
+		})
+	}
+
 	resourceData.Set("name", (*resp).(*threatstack.HostRule).Name)
 	resourceData.Set("type", (*resp).(*threatstack.HostRule).Type)
 	resourceData.Set("title", (*resp).(*threatstack.HostRule).Title)
@@ -188,6 +207,8 @@ func resourceHostRuleRead(resourceData *schema.ResourceData, meta interface{}) e
 	resourceData.Set("window", (*resp).(*threatstack.HostRule).Window)
 	resourceData.Set("threshold", (*resp).(*threatstack.HostRule).Threshold)
 	resourceData.Set("enabled", (*resp).(*threatstack.HostRule).Enabled)
+	resourceData.Set("include_tag", includeTags)
+	resourceData.Set("exclude_tag", excludeTags)
 
 	return nil
 }
