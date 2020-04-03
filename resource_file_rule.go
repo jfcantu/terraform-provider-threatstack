@@ -251,9 +251,12 @@ func resourceFileRuleRead(resourceData *schema.ResourceData, meta interface{}) e
 	resourceData.Set("name", (*resp).(*threatstack.FileRule).Name)
 	resourceData.Set("type", (*resp).(*threatstack.FileRule).Type)
 	resourceData.Set("title", (*resp).(*threatstack.FileRule).Title)
+	resourceData.Set("description", (*resp).(*threatstack.FileRule).Description)
 	resourceData.Set("severity", (*resp).(*threatstack.FileRule).Severity)
+	resourceData.Set("aggregate_fields", (*resp).(*threatstack.FileRule).AggregateFields)
 	resourceData.Set("filter", (*resp).(*threatstack.FileRule).Filter)
 	resourceData.Set("window", (*resp).(*threatstack.FileRule).Window)
+	resourceData.Set("suppressions", (*resp).(*threatstack.FileRule).Suppressions)
 	resourceData.Set("threshold", (*resp).(*threatstack.FileRule).Threshold)
 	resourceData.Set("enabled", (*resp).(*threatstack.FileRule).Enabled)
 	resourceData.Set("include_tag", includeTags)
@@ -271,12 +274,56 @@ func resourceFileRuleUpdate(resourceData *schema.ResourceData, meta interface{})
 	desc := resourceData.Get("description").(string)
 	ruleset := resourceData.Get("ruleset").(string)
 	severity := resourceData.Get("severity").(int)
-	aggregate := resourceData.Get("aggregate_fields").([]string)
+
+	var aggregate []string
+	for _, v := range resourceData.Get("aggregate_fields").(*schema.Set).List() {
+		aggregate = append(aggregate, v.(string))
+	}
+
 	filter := resourceData.Get("filter").(string)
 	window := resourceData.Get("window").(int)
 	threshold := resourceData.Get("threshold").(int)
-	suppressions := resourceData.Get("suppressions").([]string)
+
+	var suppressions []string
+	for _, v := range resourceData.Get("suppressions").(*schema.Set).List() {
+		suppressions = append(suppressions, v.(string))
+	}
+
 	enabled := resourceData.Get("enabled").(bool)
+	tags := threatstack.NewTagSet()
+
+	for _, tag := range resourceData.Get("include_tag").(*schema.Set).List() {
+		tags.Include = append(tags.Include, &threatstack.Tag{
+			Source: tag.(map[string]interface{})["source"].(string),
+			Key:    tag.(map[string]interface{})["key"].(string),
+			Value:  tag.(map[string]interface{})["value"].(string),
+		})
+	}
+	for _, tag := range resourceData.Get("exclude_tag").(*schema.Set).List() {
+		tags.Exclude = append(tags.Exclude, &threatstack.Tag{
+			Source: tag.(map[string]interface{})["source"].(string),
+			Key:    tag.(map[string]interface{})["key"].(string),
+			Value:  tag.(map[string]interface{})["value"].(string),
+		})
+	}
+
+	paths := []*threatstack.FilePath{}
+	for _, path := range resourceData.Get("file_path").(*schema.Set).List() {
+		paths = append(paths, &threatstack.FilePath{
+			Path:      path.(map[string]interface{})["path"].(string),
+			Recursive: path.(map[string]interface{})["recursive"].(bool),
+		})
+	}
+
+	var ignorePaths []string
+	for _, v := range resourceData.Get("ignore_files").(*schema.Set).List() {
+		ignorePaths = append(ignorePaths, v.(string))
+	}
+
+	var monitorEvents []string
+	for _, v := range resourceData.Get("monitor_events").(*schema.Set).List() {
+		monitorEvents = append(monitorEvents, v.(string))
+	}
 
 	_, err := client.Rules.Update(
 		ruleset,
@@ -284,19 +331,22 @@ func resourceFileRuleUpdate(resourceData *schema.ResourceData, meta interface{})
 		&threatstack.FileRule{
 			Type:            "File",
 			Name:            name,
+			Tags:            tags,
 			Title:           title,
 			Description:     desc,
-			RulesetID:       ruleset,
 			Severity:        severity,
 			AggregateFields: aggregate,
 			Filter:          filter,
 			Window:          window,
 			Threshold:       threshold,
 			Suppressions:    suppressions,
+			Paths:           paths,
+			IgnoreFiles:     ignorePaths,
+			MonitorEvents:   monitorEvents,
 			Enabled:         enabled,
 		})
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return resourceFileRuleRead(resourceData, meta)
