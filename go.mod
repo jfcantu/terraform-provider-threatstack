@@ -8,7 +8,3 @@ require (
 	github.com/jfcantu/threatstack-golang v0.1.4
 	github.com/sirupsen/logrus v1.4.2
 )
-
-replace github.com/jfcantu/threatstack-golang => ../threatstack-golang
-
-replace github.com/jfcantu/terraform-provider-threatstack => ./
