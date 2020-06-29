@@ -11,6 +11,9 @@ func resourceRuleset() *schema.Resource {
 		Read:   resourceRulesetRead,
 		Update: resourceRulesetUpdate,
 		Delete: resourceRulesetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{

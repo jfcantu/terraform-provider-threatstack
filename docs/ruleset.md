@@ -24,4 +24,8 @@ In addition to the above arguments, the following attributes are exported:
 
 ## Import
 
-Import functionality is not yet supported.
+`threatstack_ruleset` can be imported by using the ruleset ID:
+
+```console
+terraform import 00000000-0000-0000-0000-000000000000
+```

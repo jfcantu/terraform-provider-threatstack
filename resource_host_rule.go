@@ -1,6 +1,9 @@
 package main
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/jfcantu/threatstack-golang/threatstack"
@@ -12,6 +15,9 @@ func resourceHostRule() *schema.Resource {
 		Read:   resourceHostRuleRead,
 		Update: resourceHostRuleUpdate,
 		Delete: resourceHostRuleDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -171,9 +177,19 @@ func resourceHostRuleCreate(resourceData *schema.ResourceData, meta interface{})
 
 func resourceHostRuleRead(resourceData *schema.ResourceData, meta interface{}) error {
 	client := meta.(*threatstack.Client)
+	var ruleset, id string
 
-	ruleset := resourceData.Get("ruleset").(string)
-	id := resourceData.Id()
+	parts := strings.Split(resourceData.Id(), "_")
+
+	if len(parts) == 1 {
+		ruleset = resourceData.Get("ruleset").(string)
+		id = resourceData.Id()
+	} else if len(parts) == 2 {
+		ruleset = parts[0]
+		id = parts[1]
+	} else {
+		return errors.New("Unexpected ID format - should be RULESET-ID_RULE-ID")
+	}
 
 	resp, err := client.Rules.Get(ruleset, id)
 	if err != nil {

@@ -64,4 +64,8 @@ The `include_tag` and `exclude_tag` blocks must contain the following attributes
 
 ## Import
 
-Import functionality is not yet supported.
+`threatstack_host_rule` can be imported by using the ruleset ID, and underscore, and the rule ID:
+
+```console
+terraform import 00000000-0000-0000-0000-000000000000_11111111-1111-1111-1111-111111111111
+```
